@@ -4,6 +4,7 @@ import torch
 from torch import nn
 
 Activation = Union[str, nn.Module]
+import pdb
 
 
 _str_to_activation = {
@@ -47,7 +48,19 @@ def build_mlp(
 
     # TODO: return a MLP. This should be an instance of nn.Module
     # Note: nn.Sequential is an instance of nn.Module.
-    raise NotImplementedError
+    layers = []
+    current_dim = input_size
+    for _ in range(n_layers):
+        layers.extend([
+            nn.Linear(current_dim, size),
+            activation,
+        ])
+        current_dim = size
+    layers.extend([
+        nn.Linear(current_dim, output_size),
+        output_activation,
+    ])
+    return nn.Sequential(*layers)
 
 
 device = None
