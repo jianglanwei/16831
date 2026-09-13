@@ -11,6 +11,7 @@ from torch import distributions
 
 from rob831.infrastructure import pytorch_util as ptu
 from rob831.policies.base_policy import BasePolicy
+import pdb
 
 
 class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
@@ -101,17 +102,50 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
 class MLPPolicySL(MLPPolicy):
     def __init__(self, ac_dim, ob_dim, n_layers, size, **kwargs):
+        """
+        - Input:
+            `ac_dim`: int (8);
+            `ob_dim`: int (111);
+            `n_layers`: int (5);
+            `size`: int (64).
+        """
         super().__init__(ac_dim, ob_dim, n_layers, size, **kwargs)
         self.loss = nn.MSELoss()
 
+    def get_action(self, obs: np.ndarray) -> np.ndarray:
+        if len(obs.shape) > 1:
+            observation = obs
+        else:
+            observation = obs[None]
+
+        obs_tensor = ptu.from_numpy(observation)
+
+        # TODO return the action that the policy prescribes
+        act_tensor = self.forward(obs_tensor)
+        return ptu.to_numpy(act_tensor)
+    
+    def forward(self, observation: torch.FloatTensor) -> torch.Tensor:
+        if self.discrete:
+            return self.logits_na(observation)
+        else:
+            return self.mean_net(observation)
+    
     def update(
             self, observations, actions,
             adv_n=None, acs_labels_na=None, qvals=None
     ):
         # TODO: update the policy and return the loss
-        loss = TODO
+        act_tensor = ptu.from_numpy(actions)
+        obs_tensor = ptu.from_numpy(observations)
+        loss_func = nn.MSELoss()
+        loss = loss_func(self.forward(obs_tensor), act_tensor)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
 
         return {
             # You can add extra logging information here, but keep this line
             'Training Loss': ptu.to_numpy(loss),
         }
+

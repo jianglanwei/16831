@@ -1,13 +1,20 @@
 import numpy as np
 import time
+import gym
+import torch
 
 ############################################
 ############################################
 
-def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('rgb_array')):
+def sample_trajectory(env: gym.Env, 
+                      policy: torch.nn.Module, 
+                      max_path_length: int, 
+                      render=False, 
+                      render_mode=('rgb_array')
+                      ) -> dict:
 
     # initialize env for the beginning of a new rollout
-    ob = TODO  # HINT: should be the output of resetting the env [OK]
+    ob = env.reset()  # HINT: should be the output of resetting the env [OK]
 
     # init vars
     obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
@@ -27,7 +34,7 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
 
         # use the most recent ob to decide what to do
         obs.append(ob)
-        ac = TODO # HINT: query the policy's get_action function [OK]
+        ac = policy.get_action(ob) # HINT: query the policy's get_action function [OK]
         ac = ac[0]
         acs.append(ac)
 
@@ -41,31 +48,47 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
 
         # TODO end the rollout if the rollout ended
         # HINT: rollout can end due to done, or due to max_path_length
-        rollout_done = TODO  # HINT: this is either 0 or 1
+        rollout_done = done or steps == max_path_length  # HINT: this is either 0 or 1
         terminals.append(rollout_done)
 
         if rollout_done:
             break
 
-    return Path(obs, image_obs, acs, rewards, next_obs, terminals)
+    return Path(obs, image_obs, acs, rewards, next_obs, terminals) # this is one rollout.
 
-def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, render=False, render_mode=('rgb_array')):
+def sample_trajectories(env: gym.Env, 
+                        policy: torch.nn.Module, 
+                        min_timesteps_per_batch: int, 
+                        max_path_length: int, 
+                        render=False, 
+                        render_mode=('rgb_array')
+                        ) -> tuple[list[dict], int]:
     """
         Collect rollouts until we have collected min_timesteps_per_batch steps.
 
         TODO implement this function
         Hint1: use sample_trajectory to get each path (i.e. rollout) that goes into paths
         Hint2: use get_pathlength to count the timesteps collected in each path
+
+        :return paths: sampled trajectories.
+        :return timesteps_this_batch: number of timesteps in this batch.
     """
     timesteps_this_batch = 0
     paths = []
     while timesteps_this_batch < min_timesteps_per_batch:
-
-        TODO
+        path = sample_trajectory(env, policy, max_path_length, render, render_mode)
+        paths.append(path)
+        timesteps_this_batch += get_pathlength(path)
 
     return paths, timesteps_this_batch
 
-def sample_n_trajectories(env, policy, ntraj, max_path_length, render=False, render_mode=('rgb_array')):
+def sample_n_trajectories(env: gym.Env,
+                          policy: torch.nn.Module, 
+                          ntraj: int, 
+                          max_path_length: int, 
+                          render=False, 
+                          render_mode=('rgb_array')
+                          ) -> list[dict]:
     """
         Collect ntraj rollouts.
 
@@ -74,7 +97,9 @@ def sample_n_trajectories(env, policy, ntraj, max_path_length, render=False, ren
     """
     sampled_paths = []
 
-    TODO
+    for _ in range(ntraj):
+        path = sample_trajectory(env, policy, max_path_length, render, render_mode)
+        sampled_paths.append(path)
 
     return sampled_paths
 
