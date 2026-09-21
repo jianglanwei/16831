@@ -32,3 +32,24 @@ You will then need to complete the following new files for homework 2. The relev
 You will also want to look through [scripts/run_hw2.py](rob831/scripts/run_hw2.py) (if running locally) or [scripts/run_hw2.ipynb](rob831/scripts/run_hw2.ipynb) (if running on Colab), though you will not need to edit this files beyond changing runtime arguments in the Colab notebook.
 
 You will be running your policy gradients implementation in five experiments total, investigating the effects of design decisions like reward-to-go estimators, neural network baselines and generalized advantage estimation for variance reduction, and advantage normalization. See the assignment PDF for more details.
+
+## Section 5 plots
+
+The one-time scripts embed the evaluation returns directly and do not read logs.
+Run from `hw2` in the `rob831` environment:
+
+```bash
+python plots/plot_hw2_q1.py
+python plots/plot_hw2_q2.py
+```
+
+- `plots/q1_sb.svg` and `plots/q1_lb.svg`: separate small- and large-batch CartPole comparisons (also saved as PNGs).
+- `plots/q2_inverted_pendulum.png`: batch 500, learning rate 0.03, seed 1;
+  first reaches 1000 at iteration 72, and all final ten evaluations return 1000.
+
+Both figures also have SVG copies and use the font family and sizes from
+`hw1/plots/plot_dagger.py`. All curves are unsmoothed.
+
+Experiment 2 output logs and exact commands are in `outputs/`. See
+[the experiment summary](outputs/q2_experiment_summary.md) for the approximate
+search range, completed and stopped trials, and full configurations.

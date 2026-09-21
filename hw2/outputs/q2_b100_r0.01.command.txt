@@ -1,0 +1,1 @@
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /home/jianglan/miniconda3/envs/rob831/bin/python -u rob831/scripts/run_hw2.py --env_name InvertedPendulum-v4 --ep_len 1000 --discount 0.92 -n 100 -l 2 -s 64 -b 100 -lr 0.01 -rtg --seed 1 --exp_name q2_b100_r0.01 2>&1 | tee outputs/q2_b100_r0.01.txt
