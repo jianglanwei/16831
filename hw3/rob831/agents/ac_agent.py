@@ -31,7 +31,7 @@ class ACAgent(BaseAgent):
         self.replay_buffer = ReplayBuffer()
 
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
-        # TODO Implement the following pseudocode:
+        # Perform the critic and actor updates in sequence:
         # for agent_params['num_critic_updates_per_agent_update'] steps,
         #     update the critic
 
@@ -40,23 +40,40 @@ class ACAgent(BaseAgent):
         # for agent_params['num_actor_updates_per_agent_update'] steps,
         #     update the actor
 
+        for _ in range(
+                self.agent_params['num_critic_updates_per_agent_update']):
+            critic_loss = self.critic.update(
+                ob_no, ac_na, next_ob_no, re_n, terminal_n
+            )
+
+        adv_n = self.estimate_advantage(
+            ob_no, next_ob_no, re_n, terminal_n
+        )
+
+        for _ in range(
+                self.agent_params['num_actor_updates_per_agent_update']):
+            actor_loss = self.actor.update(ob_no, ac_na, adv_n)
+
         loss = OrderedDict()
-        loss['Loss_Critic'] = TODO
-        loss['Loss_Actor'] = TODO
+        loss['Loss_Critic'] = critic_loss
+        loss['Loss_Actor'] = actor_loss
 
         return loss
 
     def estimate_advantage(self, ob_no, next_ob_no, re_n, terminal_n):
-        # TODO Implement the following pseudocode:
+        # Estimate one-step temporal-difference advantages:
         # 1) query the critic with ob_no, to get V(s)
         # 2) query the critic with next_ob_no, to get V(s')
         # 3) estimate the Q value as Q(s, a) = r(s, a) + gamma*V(s')
         # HINT: Remember to cut off the V(s') term (ie set it to 0) at terminal states (ie terminal_n=1)
         # 4) calculate advantage (adv_n) as A(s, a) = Q(s, a) - V(s)
-        adv_n = TODO
+        values = self.critic.forward_np(ob_no)
+        next_values = self.critic.forward_np(next_ob_no)
+        q_values = re_n + self.gamma * next_values * (1 - terminal_n)
+        adv_n = q_values - values
 
         if self.standardize_advantages:
-            adv_n = TODO
+            adv_n = (adv_n - adv_n.mean()) / (adv_n.std() + 1e-8)
         return adv_n
 
     def add_to_replay_buffer(self, paths):
